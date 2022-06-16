@@ -5,28 +5,52 @@ import br.com.pzg.project.two.domain.Course;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 
+import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
+
+import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
+
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
 @Service
-public class FauxDataService {
+public class FauxDataService implements CourseDataService{
+    private List<Course> crsList;
 
-    public List<Course> courses;
-    public List<Author> authors;
+    public FauxDataService() {
+        this.crsList = new ArrayList<>();
+    }
 
-    public Flux<Author> aut;
+    @Override
+    public Flux<Course> findAll(){
+        return Flux.fromIterable(this.crsList);
+    }
 
-    public FauxDataService(){
+    @Override
+    public void save(Course nueCourse){
+        crsList.add(nueCourse);
+    }
 
-        Author a1 = Author.builder().id(UUID.randomUUID()).firstName("FirsName1").lastName("LastName1").build();
-        Author a2 = Author.builder().id(UUID.randomUUID()).firstName("FirsName2").lastName("LastName2").build();
+    @Override
+    public void saveAll(List<Course> nueCourses){
+        this.crsList.addAll(nueCourses);
+    }
 
-        Course c1 = Course.builder().id(UUID.randomUUID()).author(a1).name("Course1").build();
-        Course c2 = Course.builder().id(UUID.randomUUID()).author(a1).name("Course2").build();
-        Course c3 = Course.builder().id(UUID.randomUUID()).author(a2).name("Course3").build();
+    @Override
+    public Flux<Course> findCourseByTitleContianing(String phrase){
+        return Flux.fromStream(
+                crsList.stream().filter(course -> course.getCatalogTitle().contains(phrase)));
+    }
 
-        this.courses = Arrays.asList(c1, c2, c3);
-        this.authors = Arrays.asList(a1, a2);
+    @Override
+    public Mono<Course> findCourseByTitle(String title) {
+        return Mono.justOrEmpty(
+                crsList.stream().filter(c->c.getCatalogTitle().equalsIgnoreCase(title)).findFirst()
+        );
     }
 }
